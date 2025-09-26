@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: ecommerce-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ecommerce
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-secure_root_password}
+      MYSQL_USER: ${DB_USER:-ecommerce_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secure_password}
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - ecommerce-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker_files/Dockerfile.backend
+    container_name: ecommerce-backend
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/ecommerce
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-ecommerce_user}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-secure_password}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_PROFILES_ACTIVE: prod
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      SERVER_PORT: 8081
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    networks:
+      - ecommerce-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker_files/Dockerfile.frontend
+    container_name: ecommerce-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - ecommerce-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    container_name: ecommerce-nginx
+    restart: unless-stopped
+    ports:
+      - "443:443"
+      - "8080:80"
+    volumes:
+      - ./docker_files/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - ecommerce-net
+
+volumes:
+  db_data:
+    driver: local
+
+networks:
+  ecommerce-net:
+    driver: bridge
