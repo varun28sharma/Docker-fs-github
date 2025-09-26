@@ -1,0 +1,49 @@
+name: CI - Build Docker Images
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build frontend image
+        run: |
+          docker build \
+            -f Dockerfile.frontend \
+            -t docker-fe-s104:ci \
+            .
+
+      - name: Build backend image
+        run: |
+          docker build \
+            -f Dockerfile.backend \
+            -t docker-be-s104:ci \
+            .
+
+      # Optional: Log in and push to GHCR if secrets provided
+      # - name: Log in to GHCR
+      #   if: ${{ secrets.GHCR_USERNAME && secrets.GHCR_TOKEN }}
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ secrets.GHCR_USERNAME }}
+      #     password: ${{ secrets.GHCR_TOKEN }}
+      # - name: Push images to GHCR
+      #   if: ${{ secrets.GHCR_USERNAME && secrets.GHCR_TOKEN }}
+      #   run: |
+      #     docker tag docker-fe-s104:ci ghcr.io/${{ secrets.GHCR_USERNAME }}/docker-fe-s104:ci
+      #     docker tag docker-be-s104:ci ghcr.io/${{ secrets.GHCR_USERNAME }}/docker-be-s104:ci
+      #     docker push ghcr.io/${{ secrets.GHCR_USERNAME }}/docker-fe-s104:ci
+      #     docker push ghcr.io/${{ secrets.GHCR_USERNAME }}/docker-be-s104:ci
+
+
