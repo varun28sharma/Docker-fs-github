@@ -2,11 +2,8 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Install git and required dependencies
-RUN apk add --no-cache git
-
-# Clone your frontend repo
-RUN git clone https://github.com/varun28sharma/docker-fe-s104.git .
+# Copy the local frontend source code
+COPY ../docker-ecommerce-frontend/ .
 
 # Install dependencies as root first
 RUN npm install -g vite
