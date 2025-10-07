@@ -3,7 +3,7 @@
     WORKDIR /app
     
     # Copy the local backend source code
-    COPY ../docker-ecommerce-backend/ .
+    COPY docker-ecommerce-backend/ .
     
     # Build the Spring Boot JAR (cache Maven dependencies for speed)
     RUN --mount=type=cache,target=/root/.m2 mvn clean install package -DskipTests
