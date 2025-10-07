@@ -30,7 +30,7 @@ const Laptops = () => {
         {products.length > 0 ? (
           products.map((product) => (
             <div key={product.id} className="product-card">
-              <img src={`http://localhost:8080/api/products/images/${product.imagePath}`} alt={product.name} />
+              <img src={`http://3.27.242.85:8081/api/products/images/${product.imagePath}`} alt={product.name} />
               <h4>{product.name}</h4>
               <p>${product.price.toFixed(2)}</p>
               <button onClick={() => handleAddToCart(product)}>Add to Cart</button>
